@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Building Dating Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom right, #ff9a9e, #fad0c4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #game-container {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Table Building Dating Simulator</h1>
+        <div id="game"></div>
+    </div>
+
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            parent: 'game',
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+
+        function preload() {
+            // Load assets here
+            this.load.image('background', 'https://example.com/background.jpg');
+            this.load.image('character', 'https://example.com/character.png');
+            this.load.image('table', 'https://example.com/table.png');
+        }
+
+        function create() {
+            // Set up game objects here
+            this.add.image(400, 300, 'background');
+            this.character = this.add.image(200, 450, 'character');
+            this.table = this.add.image(600, 450, 'table');
+
+            this.add.text(400, 50, 'Build a table to win their heart!', {
+                fontSize: '24px',
+                fill: '#ffffff',
+                align: 'center'
+            }).setOrigin(0.5);
+        }
+
+        function update() {
+            // Game logic goes here
+        }
+    </script>
+</body>
+</html>
