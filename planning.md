@@ -1,5 +1,5 @@
 # Table Building Dating Simulator
-
+ - made as a website in html/css/js by ada, VA by Zach, music by Emily, character sprites by Teddith, background sprites by Ada, general consulting by Dashiell
 ## Characters:
  - Jesus: man who looks like jesus but trans mexican boy, cross shaped skateboard, gives carpentry tips
  - Mellisa: woman who has a dateable husband named Jeff, has two kids one of which named timmy
