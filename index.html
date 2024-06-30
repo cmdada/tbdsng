@@ -175,11 +175,89 @@
             const video = this.add.video(400, 300, 'intro');
             video.play();
             video.on('complete', function() {
-                this.scene.start('MainScene');
+                this.scene.start('TableBuildingScene');
             }, this);
         }
     }
 
+class TableBuildingScene extends Phaser.Scene {
+    constructor() {
+        super('TableBuildingScene');
+    }
+
+    create() {
+        this.add.text(400, 50, 'Build Your Table!', {
+            fontSize: '24px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        this.graphics = this.add.graphics();
+        this.lines = [];
+        this.currentLine = null;
+        this.lastEndPoint = null;
+
+        this.input.on('pointerdown', this.startLine, this);
+        this.input.on('pointermove', this.drawLine, this);
+        this.input.on('pointerup', this.endLine, this);
+
+        this.finishButton = this.add.text(700, 550, 'Finish', {
+            fontSize: '20px',
+            fill: '#ffffff',
+            backgroundColor: '#4a4a4a',
+            padding: { x: 10, y: 5 }
+        }).setInteractive();
+
+        this.finishButton.on('pointerdown', () => {
+            console.log('Table finished!');
+            this.scene.start('MainScene');
+        });
+
+        this.instructionText = this.add.text(400, 100, 'Click to start drawing. Click again to start a new line.', {
+            fontSize: '18px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+    }
+
+    startLine(pointer) {
+        if (this.lastEndPoint) {
+            this.currentLine = new Phaser.Geom.Line(this.lastEndPoint.x, this.lastEndPoint.y, pointer.x, pointer.y);
+        } else {
+            this.currentLine = new Phaser.Geom.Line(pointer.x, pointer.y, pointer.x, pointer.y);
+        }
+    }
+
+    drawLine(pointer) {
+        if (!this.currentLine) return;
+
+        this.currentLine.x2 = pointer.x;
+        this.currentLine.y2 = pointer.y;
+
+        this.graphics.clear();
+        this.graphics.lineStyle(2, 0xffffff);
+
+        this.lines.forEach(line => {
+            this.graphics.strokeLineShape(line);
+        });
+        this.graphics.strokeLineShape(this.currentLine);
+    }
+
+    endLine(pointer) {
+        if (!this.currentLine) return;
+
+        this.lines.push(this.currentLine);
+        this.lastEndPoint = { x: this.currentLine.x2, y: this.currentLine.y2 };
+        this.currentLine = null;
+
+        // Redraw all lines
+        this.graphics.clear();
+        this.graphics.lineStyle(2, 0xffffff);
+        this.lines.forEach(line => {
+            this.graphics.strokeLineShape(line);
+        });
+    }
+}
     // Phaser game configuration
     let game;
     const config = {
@@ -187,7 +265,7 @@
         width: 800,
         height: 600,
         parent: 'game',
-        scene: [MainScene, IntroScene]
+        scene: [MainScene, IntroScene, TableBuildingScene]
     };
 
     // Options window functionality
