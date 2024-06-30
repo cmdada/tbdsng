@@ -62,7 +62,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom right, #ff9a9e, #fad0c4);
+            background-color: rgba(255, 255, 255, 0.9);
             z-index: 1000;
             text-align: center;
             padding: 20px;
@@ -92,8 +92,11 @@
             <option value="24">Large</option>
         </select>
         <br>
-        <label for="bg-color">Background Color:</label>
-        <input type="color" id="bg-color" value="#ff9a9e">
+        <label for="bg-color-1">Background Color 1:</label>
+        <input type="color" id="bg-color-1" value="#ff9a9e">
+        <br>
+        <label for="bg-color-2">Background Color 2:</label>
+        <input type="color" id="bg-color-2" value="#fad0c4">
         <br>
         <button id="apply-options">Apply</button>
         <button id="close-options">Close</button>
@@ -116,7 +119,7 @@
             ctx.drawImage(flyingImage, imageX, imageY, 100, 100);
 
             imageX -= 2; 
-            imageY += 1;
+            imageY += 1; 
 
             if (imageX < -100 || imageY > canvas.height) {
                 imageX = canvas.width;
@@ -169,7 +172,8 @@
         const applyButton = document.getElementById('apply-options');
         const closeButton = document.getElementById('close-options');
         const fontSizeSelect = document.getElementById('font-size');
-        const bgColorInput = document.getElementById('bg-color');
+        const bgColorInput1 = document.getElementById('bg-color-1');
+        const bgColorInput2 = document.getElementById('bg-color-2');
 
         function showOptionsWindow() {
             optionsWindow.style.display = 'block';
@@ -181,7 +185,8 @@
 
         function applyOptions() {
             const fontSize = fontSizeSelect.value + 'px';
-            const bgColor = bgColorInput.value;
+            const bgColor1 = bgColorInput1.value;
+            const bgColor2 = bgColorInput2.value;
 
             if (game && game.scene.scenes[0]) {
                 game.scene.scenes[0].character.setFontSize(fontSize);
@@ -189,7 +194,7 @@
                 game.scene.scenes[0].titleText.setFontSize(parseInt(fontSize) + 4 + 'px');
             }
 
-            document.body.style.background = `linear-gradient(to bottom right, ${bgColor}, #fad0c4)`;
+            document.body.style.background = `linear-gradient(to bottom right, ${bgColor1}, ${bgColor2})`;
 
             hideOptionsWindow();
         }
@@ -200,7 +205,8 @@
         function checkScreenSize() {
             const gameContainer = document.getElementById('game-container');
             const smallScreenMessage = document.getElementById('small-screen-message');
-            const minWidth = 800; 
+            const minWidth = 800; // Minimum width to show the game
+
             if (window.innerWidth < minWidth) {
                 gameContainer.style.display = 'none';
                 smallScreenMessage.style.display = 'block';
