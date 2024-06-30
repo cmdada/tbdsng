@@ -101,131 +101,155 @@
         <button id="apply-options">Apply</button>
         <button id="close-options">Close</button>
     </div>
-    <script>
-        // Background animation
-        const canvas = document.getElementById('background-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+<script>
+    // Background animation
+    const canvas = document.getElementById('background-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-        const flyingImage = new Image();
-        flyingImage.src = 'assets/flying_image.png';
+    const flyingImage = new Image();
+    flyingImage.src = 'assets/flying_image.png';
 
-        let imageX = canvas.width;
-        let imageY = -100;
+    let imageX = canvas.width;
+    let imageY = -100;
 
-        function animateBackground() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(flyingImage, imageX, imageY, 100, 100);
+    function animateBackground() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(flyingImage, imageX, imageY, 100, 100);
 
-            imageX -= 2; 
-            imageY += 1.12; 
+        imageX -= 2; 
+        imageY += 1.12; 
 
-            if (imageX < -100 || imageY > canvas.height) {
-                imageX = canvas.width;
-                imageY = -100;
-            }
-
-            requestAnimationFrame(animateBackground);
+        if (imageX < -100 || imageY > canvas.height) {
+            imageX = canvas.width;
+            imageY = -100;
         }
 
-        flyingImage.onload = animateBackground;
+        requestAnimationFrame(animateBackground);
+    }
 
-        // Phaser game configuration
-        let game;
-        const config = {
-            type: Phaser.AUTO,
-            width: 800,
-            height: 600,
-            parent: 'game',
-            scene: {
-                preload: preload,
-                create: create,
-                update: update
-            }
-        };
+    flyingImage.onload = animateBackground;
 
-        function preload() {
+    // Phaser game scenes
+    class MainScene extends Phaser.Scene {
+        constructor() {
+            super('MainScene');
+        }
+
+        preload() {
             this.load.image('background', 'assets/bg.png');
+            this.load.video('intro', 'assets/intro.mp4');
         }
 
-        function create() {
+        create() {
             this.add.image(400, 300, 'background');
-            this.character = this.add.text(200, 450, 'start', { fontSize: '20px' });
-            this.table = this.add.text(600, 450, 'options', { fontSize: '20px' });
+            this.startText = this.add.text(200, 450, 'start', { fontSize: '20px' });
+            this.optionsText = this.add.text(600, 450, 'options', { fontSize: '20px' });
             this.titleText = this.add.text(400, 50, 'Build a table to win their heart!', {
                 fontSize: '24px',
                 fill: '#ffffff',
                 align: 'center'
             }).setOrigin(0.5);
 
-            this.table.setInteractive();
-            this.table.on('pointerdown', showOptionsWindow);
+            this.startText.setInteractive();
+            this.startText.on('pointerdown', () => {
+                this.scene.start('IntroScene');
+            });
+
+            this.optionsText.setInteractive();
+            this.optionsText.on('pointerdown', showOptionsWindow);
         }
 
-        function update() {
+        update() {
             // Game logic goes here :3
         }
+    }
 
-        // Options window functionality
-        const optionsWindow = document.getElementById('options-window');
-        const applyButton = document.getElementById('apply-options');
-        const closeButton = document.getElementById('close-options');
-        const fontSizeSelect = document.getElementById('font-size');
-        const bgColorInput1 = document.getElementById('bg-color-1');
-        const bgColorInput2 = document.getElementById('bg-color-2');
-
-        function showOptionsWindow() {
-            optionsWindow.style.display = 'block';
+    class IntroScene extends Phaser.Scene {
+        constructor() {
+            super('IntroScene');
         }
 
-        function hideOptionsWindow() {
-            optionsWindow.style.display = 'none';
+        create() {
+            const video = this.add.video(400, 300, 'intro');
+            video.play();
+            video.on('complete', function() {
+                this.scene.start('MainScene');
+            }, this);
+        }
+    }
+
+    // Phaser game configuration
+    let game;
+    const config = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        parent: 'game',
+        scene: [MainScene, IntroScene]
+    };
+
+    // Options window functionality
+    const optionsWindow = document.getElementById('options-window');
+    const applyButton = document.getElementById('apply-options');
+    const closeButton = document.getElementById('close-options');
+    const fontSizeSelect = document.getElementById('font-size');
+    const bgColorInput1 = document.getElementById('bg-color-1');
+    const bgColorInput2 = document.getElementById('bg-color-2');
+
+    function showOptionsWindow() {
+        optionsWindow.style.display = 'block';
+    }
+
+    function hideOptionsWindow() {
+        optionsWindow.style.display = 'none';
+    }
+
+    function applyOptions() {
+        const fontSize = fontSizeSelect.value + 'px';
+        const bgColor1 = bgColorInput1.value;
+        const bgColor2 = bgColorInput2.value;
+
+        if (game && game.scene.scenes[0]) {
+            game.scene.scenes[0].startText.setFontSize(fontSize);
+            game.scene.scenes[0].optionsText.setFontSize(fontSize);
+            game.scene.scenes[0].titleText.setFontSize(parseInt(fontSize) + 4 + 'px');
         }
 
-        function applyOptions() {
-            const fontSize = fontSizeSelect.value + 'px';
-            const bgColor1 = bgColorInput1.value;
-            const bgColor2 = bgColorInput2.value;
+        document.body.style.background = `linear-gradient(to bottom right, ${bgColor1}, ${bgColor2})`;
 
-            if (game && game.scene.scenes[0]) {
-                game.scene.scenes[0].character.setFontSize(fontSize);
-                game.scene.scenes[0].table.setFontSize(fontSize);
-                game.scene.scenes[0].titleText.setFontSize(parseInt(fontSize) + 4 + 'px');
+        hideOptionsWindow();
+    }
+
+    applyButton.addEventListener('click', applyOptions);
+    closeButton.addEventListener('click', hideOptionsWindow);
+
+    function checkScreenSize() {
+        const gameContainer = document.getElementById('game-container');
+        const smallScreenMessage = document.getElementById('small-screen-message');
+        const minWidth = 800; // Minimum width to show the game
+
+        if (window.innerWidth < minWidth) {
+            gameContainer.style.display = 'none';
+            smallScreenMessage.style.display = 'block';
+            if (game) {
+                game.destroy(true);
+                game = null;
             }
-
-            document.body.style.background = `linear-gradient(to bottom right, ${bgColor1}, ${bgColor2})`;
-
-            hideOptionsWindow();
-        }
-
-        applyButton.addEventListener('click', applyOptions);
-        closeButton.addEventListener('click', hideOptionsWindow);
-
-        function checkScreenSize() {
-            const gameContainer = document.getElementById('game-container');
-            const smallScreenMessage = document.getElementById('small-screen-message');
-            const minWidth = 800; // Minimum width to show the game
-
-            if (window.innerWidth < minWidth) {
-                gameContainer.style.display = 'none';
-                smallScreenMessage.style.display = 'block';
-                if (game) {
-                    game.destroy(true);
-                    game = null;
-                }
-            } else {
-                gameContainer.style.display = 'block';
-                smallScreenMessage.style.display = 'none';
-                if (!game) {
-                    game = new Phaser.Game(config);
-                }
+        } else {
+            gameContainer.style.display = 'block';
+            smallScreenMessage.style.display = 'none';
+            if (!game) {
+                game = new Phaser.Game(config);
+                game.scene.start('MainScene');
             }
         }
+    }
 
-        // Call the function initially and on window resize
-        window.addEventListener('load', checkScreenSize);
-        window.addEventListener('resize', checkScreenSize);
-    </script>
+    // Call the function initially and on window resize
+    window.addEventListener('load', checkScreenSize);
+    window.addEventListener('resize', checkScreenSize);
+</script>
 </body>
 </html>
