@@ -87,215 +87,159 @@ class IntroScene extends Phaser.Scene {
             });
         }
     }
-    class TableBuildingScene extends Phaser.Scene {
-        preload() {
-            this.load.image('background', 'assets/bg.png');
-        }
+class TableBuildingScene extends Phaser.Scene {
+    preload() {
+        this.load.image('background', 'assets/bg.png');
+        this.load.image('tablepiece', 'assets/table.png');
+    }
 
-        constructor() {
-            super('TableBuildingScene');
-            this.template = [
-                { x1: 200, y1: 200, x2: 200, y2: 400 }, // leg 1
-                { x1: 200, y1: 400, x2: 300, y2: 400 }, // bottom 1
-                { x1: 300, y1: 200, x2: 300, y2: 400 }, // leg 2
-                { x1: 400, y1: 200, x2: 400, y2: 400 }, // leg 3
-                { x1: 400, y1: 400, x2: 500, y2: 400 }, // bottom 2
-                { x1: 500, y1: 200, x2: 500, y2: 400 }, // leg 4
-                { x1: 200, y1: 200, x2: 500, y2: 200 }  // top
-            ];
-        }
-    
-        create() {
-			this.add.image(400, 300, 'background');
+    constructor() {
+        super('TableBuildingScene');
+        this.template = [
+            { x: 200, y: 300, angle: 0 }, // leg 1
+            { x: 250, y: 400, angle: 0 }, // bottom 1
+            { x: 300, y: 300, angle: 0 }, // leg 2
+            { x: 400, y: 300, angle: 0 }, // leg 3
+            { x: 450, y: 400, angle: 0 }, // bottom 2
+            { x: 500, y: 300, angle: 0 }, // leg 4
+            { x: 350, y: 200, angle: 0 }  // top
+        ];
+    }
 
-            this.add.text(400, 50, 'Build Your Table!', {
-                fontSize: '24px',
-                fill: '#ffffff',
-                align: 'center'
-            }).setOrigin(0.5);
-    
-            this.graphics = this.add.graphics();
-            this.lines = [];
-            this.currentLine = null;
-            this.lastEndPoint = null;
-    
-            this.input.on('pointerdown', this.startLine, this);
-            this.input.on('pointermove', this.drawLine, this);
-            this.input.on('pointerup', this.endLine, this);
-    
-            this.finishButton = this.add.text(700, 550, 'Finish', {
-                fontSize: '20px',
-                fill: '#ffffff',
-                backgroundColor: '#4a4a4a',
-                padding: { x: 10, y: 5 }
-            }).setInteractive();
-    
-            this.finishButton.on('pointerdown', this.finishTable, this);
-    
-            this.instructionText = this.add.text(400, 100, 'Draw a table with 4 legs and a top. Time limit: 30 seconds', {
-                fontSize: '18px',
-                fill: '#ffffff',
-                align: 'center'
-            }).setOrigin(0.5);
-    
-            this.timeText = this.add.text(50, 50, 'Time: 30', { fontSize: '18px', fill: '#ffffff' });
-            this.scoreText = this.add.text(50, 80, 'Score: 0', { fontSize: '18px', fill: '#ffffff' });
-    
-            this.timeLeft = 30;
-            this.score = 0;
-    
-            this.timer = this.time.addEvent({
-                delay: 1000,
-                callback: this.updateTimer,
-                callbackScope: this,
-                loop: true
-            });
-    
-            // Draw template lines
-            this.drawTemplate();
-        }
-    
-        drawTemplate() {
-            this.graphics.lineStyle(2, 0xff0000); // Red color for template lines
-            this.template.forEach(line => {
-                this.graphics.strokeLineShape(new Phaser.Geom.Line(line.x1, line.y1, line.x2, line.y2));
-            });
-        }
-    
-        startLine(pointer) {
-            if (this.timeLeft > 0 && !this.isPointerOverButton(pointer)) {
-                if (this.lastEndPoint) {
-                    this.currentLine = new Phaser.Geom.Line(this.lastEndPoint.x, this.lastEndPoint.y, pointer.x, pointer.y);
-                } else {
-                    this.currentLine = new Phaser.Geom.Line(pointer.x, pointer.y, pointer.x, pointer.y);
-                }
-            }
-        }
-    
-        isPointerOverButton(pointer) {
-            const finishBounds = this.finishButton.getBounds();
-            return pointer.x >= finishBounds.x && pointer.x <= finishBounds.x + finishBounds.width &&
-                   pointer.y >= finishBounds.y && pointer.y <= finishBounds.y + finishBounds.height;
-        }
-    
-        drawLine(pointer) {
-            if (!this.currentLine || this.timeLeft <= 0) return;
-    
-            this.currentLine.x2 = pointer.x;
-            this.currentLine.y2 = pointer.y;
-    
-            this.graphics.clear();
-            this.graphics.lineStyle(2, 0xffffff); // White color for player lines
-    
-            this.lines.forEach(line => {
-                this.graphics.strokeLineShape(line);
-            });
-            this.graphics.strokeLineShape(this.currentLine);
-    
-            // Redraw template lines
-            this.drawTemplate();
-        }
-    
-        endLine(pointer) {
-            if (!this.currentLine || this.timeLeft <= 0) return;
-    
-            this.lines.push(this.currentLine);
-            this.lastEndPoint = { x: this.currentLine.x2, y: this.currentLine.y2 };
-            this.currentLine = null;
-    
-            this.graphics.clear();
-            this.graphics.lineStyle(2, 0xffffff); // White color for player lines
-            this.lines.forEach(line => {
-                this.graphics.strokeLineShape(line);
-            });
-    
-            // Redraw template lines
-            this.drawTemplate();
-        }
-    
-        updateTimer() {
-            this.timeLeft--;
-            this.timeText.setText('Time: ' + this.timeLeft);
-    
-            if (this.timeLeft <= 0) {
-                this.timer.remove();
-                this.finishTable();
-            }
-        }
-    
-        finishTable() {
-            this.timer.remove();
-    
-            let averageCoverage = this.evaluateTable();
-            this.score += averageCoverage;
-    
-            this.add.text(400, 350, 'Accuracy: ' + averageCoverage.toFixed(2) + '%', {
-                fontSize: '24px',
-                fill: '#ffffff',
-                align: 'center'
-            }).setOrigin(0.5);
-    
-            this.time.delayedCall(10000, () => {
-                this.scene.start('MainScene');
-            });
-        }
-    
-        evaluateTable() {
-            let totalCoverage = 0;
-            let totalLinesCovered = 0;
-    
-            this.template.forEach(tempLine => {
-                let coveredLength = 0;
-    
-                this.lines.forEach(line => {
-                    const intersect = Phaser.Geom.Intersects.LineToLine(tempLine, line);
-                    if (intersect) {
-                        const segmentLength = this.getIntersectionLength(tempLine, line);
-                        coveredLength += segmentLength;
-                    }
-                });
-    
-                const lineLength = Phaser.Math.Distance.Between(tempLine.x1, tempLine.y1, tempLine.x2, tempLine.y2);
-                const coveragePercentage = (coveredLength / lineLength) * 100;
-                totalCoverage += coveragePercentage;
-                totalLinesCovered++;
-            });
-    
-            const averageCoverage = totalCoverage / totalLinesCovered;
-            return averageCoverage;
-        }
-    
-        getIntersectionLength(line1, line2) {
-            const x1 = line1.x1;
-            const y1 = line1.y1;
-            const x2 = line1.x2;
-            const y2 = line1.y2;
-    
-            const x3 = line2.x1;
-            const y3 = line2.y1;
-            const x4 = line2.x2;
-            const y4 = line2.y2;
-    
-            const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-            if (denom === 0) {
-                return 0; // Parallel lines
-            }
-    
-            const intersectX = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denom;
-            const intersectY = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denom;
-    
-            const dist1 = Phaser.Math.Distance.Between(x1, y1, intersectX, intersectY);
-            const dist2 = Phaser.Math.Distance.Between(x2, y2, intersectX, intersectY);
-    
-            return Math.min(dist1, dist2);
-        }
-    
-        isLineClose(line1, line2, tolerance) {
-            return Phaser.Math.Distance.Between(line1.x1, line1.y1, line2.x1, line2.y1) < tolerance &&
-                   Phaser.Math.Distance.Between(line1.x2, line1.y2, line2.x2, line2.y2) < tolerance;
+    create() {
+        this.add.image(400, 300, 'background');
+
+        this.add.text(400, 50, 'Build Your Table!', {
+            fontSize: '24px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        this.pieces = [];
+        this.currentPiece = null;
+        this.lastPlacedPoint = null;
+
+        this.input.on('pointerdown', this.startPlacement, this);
+        this.input.on('pointermove', this.movePiece, this);
+        this.input.on('pointerup', this.endPlacement, this);
+
+        this.finishButton = this.add.text(700, 550, 'Finish', {
+            fontSize: '20px',
+            fill: '#ffffff',
+            backgroundColor: '#4a4a4a',
+            padding: { x: 10, y: 5 }
+        }).setInteractive();
+
+        this.finishButton.on('pointerdown', this.finishTable, this);
+
+        this.instructionText = this.add.text(400, 100, 'Build a table with 4 legs and a top. Time limit: 30 seconds', {
+            fontSize: '18px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        this.timeText = this.add.text(50, 50, 'Time: 30', { fontSize: '18px', fill: '#ffffff' });
+        this.scoreText = this.add.text(50, 80, 'Score: 0', { fontSize: '18px', fill: '#ffffff' });
+
+        this.timeLeft = 30;
+        this.score = 0;
+
+        this.timer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+
+        // Draw template pieces
+        this.drawTemplate();
+    }
+
+    drawTemplate() {
+        this.template.forEach(piece => {
+            this.add.image(piece.x, piece.y, 'tablepiece')
+                .setAlpha(0.3)
+                .setAngle(piece.angle)
+                .setTint(0xff0000);
+        });
+    }
+
+    startPlacement(pointer) {
+        if (this.timeLeft > 0 && !this.isPointerOverButton(pointer)) {
+            this.currentPiece = this.add.image(pointer.x, pointer.y, 'tablepiece').setInteractive();
+            this.input.setDraggable(this.currentPiece);
         }
     }
-    
+
+    movePiece(pointer) {
+        if (this.currentPiece) {
+            this.currentPiece.x = pointer.x;
+            this.currentPiece.y = pointer.y;
+        }
+    }
+
+    endPlacement(pointer) {
+        if (this.currentPiece) {
+            this.pieces.push(this.currentPiece);
+            this.currentPiece = null;
+        }
+    }
+
+    isPointerOverButton(pointer) {
+        const finishBounds = this.finishButton.getBounds();
+        return pointer.x >= finishBounds.x && pointer.x <= finishBounds.x + finishBounds.width &&
+               pointer.y >= finishBounds.y && pointer.y <= finishBounds.y + finishBounds.height;
+    }
+
+    updateTimer() {
+        this.timeLeft--;
+        this.timeText.setText('Time: ' + this.timeLeft);
+
+        if (this.timeLeft <= 0) {
+            this.timer.remove();
+            this.finishTable();
+        }
+    }
+
+    finishTable() {
+        this.timer.remove();
+
+        let averageCoverage = this.evaluateTable();
+        this.score += averageCoverage;
+
+        this.add.text(400, 350, 'Accuracy: ' + averageCoverage.toFixed(2) + '%', {
+            fontSize: '24px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        this.time.delayedCall(10000, () => {
+            this.scene.start('MainScene');
+        });
+    }
+
+    evaluateTable() {
+        let totalCoverage = 0;
+        let totalPiecesCovered = 0;
+
+        this.template.forEach(tempPiece => {
+            let bestCoverage = 0;
+
+            this.pieces.forEach(piece => {
+                const distance = Phaser.Math.Distance.Between(tempPiece.x, tempPiece.y, piece.x, piece.y);
+                const angleDiff = Math.abs(tempPiece.angle - piece.angle);
+                const coverage = 100 - (distance / 5) - (angleDiff / 3);
+                bestCoverage = Math.max(bestCoverage, coverage);
+            });
+
+            totalCoverage += bestCoverage;
+            totalPiecesCovered++;
+        });
+
+        const averageCoverage = totalCoverage / totalPiecesCovered;
+        return Math.max(0, Math.min(100, averageCoverage));
+    }
+}    
     // Phaser game configuration
     let game;
     const config = {
