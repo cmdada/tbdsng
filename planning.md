@@ -6,4 +6,4 @@
  - Jeff: man who has a dateable wife named Mellisa, has two kids one of which named timmy, most basic bitch ever but has specific hobby
  - Mcguckins girl: obvious, lesbian
  - attack helicopter/cafe owner: more tables you build = cheaper coffe
- - 
+ - Gus T. Lee: A character who is obviously possessed and tries to hide it
