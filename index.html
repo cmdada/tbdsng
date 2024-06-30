@@ -30,7 +30,7 @@
 </head>
 <body>
     <div id="game-container">
-        <h1>Table Building Dating Simulator</h1>
+        <h1>TableBuildingDatingSimulator.exe</h1>
         <div id="game"></div>
     </div>
 
@@ -57,8 +57,8 @@
 
         function create() {
             this.add.image(400, 300, 'background');
-            this.character = this.add.image(200, 450, 'character');
-            this.table = this.add.image(600, 450, 'table');
+            this.character = this.add.text(200, 450, 'start');
+            this.table = this.add.text(600, 450, 'options');
 
             this.add.text(400, 50, 'Build a table to win their heart!', {
                 fontSize: '24px',
