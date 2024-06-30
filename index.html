@@ -50,14 +50,12 @@
         const game = new Phaser.Game(config);
 
         function preload() {
-            // Load assets here
-            this.load.image('background', 'https://example.com/background.jpg');
-            this.load.image('character', 'https://example.com/character.png');
-            this.load.image('table', 'https://example.com/table.png');
+            this.load.image('background', 'assets/bg.png');
+            this.load.image('character', 'assets/character.png');
+            this.load.image('table', 'assets/table.png');
         }
 
         function create() {
-            // Set up game objects here
             this.add.image(400, 300, 'background');
             this.character = this.add.image(200, 450, 'character');
             this.table = this.add.image(600, 450, 'table');
