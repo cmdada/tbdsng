@@ -220,28 +220,40 @@ class TableBuildingScene extends Phaser.Scene {
             padding: { x: 10, y: 5 }
         }).setInteractive();
 
-        this.finishButton.on('pointerdown', () => {
-            console.log('Table finished!');
-            this.scene.start('MainScene');
-        });
+        this.finishButton.on('pointerdown', this.finishTable, this);
 
-        this.instructionText = this.add.text(400, 100, 'Click to start drawing. Click again to start a new line.', {
+        this.instructionText = this.add.text(400, 100, 'Draw a table with 4 legs and a top. Time limit: 30 seconds', {
             fontSize: '18px',
             fill: '#ffffff',
             align: 'center'
         }).setOrigin(0.5);
+
+        this.timeText = this.add.text(50, 50, 'Time: 30', { fontSize: '18px', fill: '#ffffff' });
+        this.scoreText = this.add.text(50, 80, 'Score: 0', { fontSize: '18px', fill: '#ffffff' });
+
+        this.timeLeft = 30;
+        this.score = 0;
+
+        this.timer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
     }
 
     startLine(pointer) {
-        if (this.lastEndPoint) {
-            this.currentLine = new Phaser.Geom.Line(this.lastEndPoint.x, this.lastEndPoint.y, pointer.x, pointer.y);
-        } else {
-            this.currentLine = new Phaser.Geom.Line(pointer.x, pointer.y, pointer.x, pointer.y);
+        if (this.timeLeft > 0) {
+            if (this.lastEndPoint) {
+                this.currentLine = new Phaser.Geom.Line(this.lastEndPoint.x, this.lastEndPoint.y, pointer.x, pointer.y);
+            } else {
+                this.currentLine = new Phaser.Geom.Line(pointer.x, pointer.y, pointer.x, pointer.y);
+            }
         }
     }
 
     drawLine(pointer) {
-        if (!this.currentLine) return;
+        if (!this.currentLine || this.timeLeft <= 0) return;
 
         this.currentLine.x2 = pointer.x;
         this.currentLine.y2 = pointer.y;
@@ -256,21 +268,93 @@ class TableBuildingScene extends Phaser.Scene {
     }
 
     endLine(pointer) {
-        if (!this.currentLine) return;
+        if (!this.currentLine || this.timeLeft <= 0) return;
 
         this.lines.push(this.currentLine);
         this.lastEndPoint = { x: this.currentLine.x2, y: this.currentLine.y2 };
         this.currentLine = null;
 
-        // Redraw all lines
         this.graphics.clear();
         this.graphics.lineStyle(2, 0xffffff);
         this.lines.forEach(line => {
             this.graphics.strokeLineShape(line);
         });
+
+        this.score += 10;
+        this.scoreText.setText('Score: ' + this.score);
     }
-}
-    // Phaser game configuration
+
+    updateTimer() {
+        this.timeLeft--;
+        this.timeText.setText('Time: ' + this.timeLeft);
+
+        if (this.timeLeft <= 0) {
+            this.timer.remove();
+            this.finishTable();
+        }
+    }
+
+    finishTable() {
+        this.timer.remove();
+        
+        let tableScore = this.evaluateTable();
+        this.score += tableScore;
+
+        this.add.text(400, 300, 'Table Score: ' + tableScore, {
+            fontSize: '24px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        this.add.text(400, 350, 'Total Score: ' + this.score, {
+            fontSize: '24px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        this.time.delayedCall(10000, () => {
+            this.scene.start('MainScene');
+        });
+    }
+
+    evaluateTable() {
+        let score = 0;
+        
+        // Check if there are at least 5 lines (4 legs + 1 top)
+        if (this.lines.length >= 5) {
+            score += 50;
+        }
+
+        // Check if the lines form a closed shape
+        if (this.isClosedShape()) {
+            score += 50;
+        }
+
+        // Bonus points for symmetry
+        if (this.isSymmetrical()) {
+            score += 25;
+        }
+
+        return score;
+    }
+
+    isClosedShape() {
+        // Simple check: first point should be close to the last point
+        if (this.lines.length < 3) return false;
+        let firstPoint = { x: this.lines[0].x1, y: this.lines[0].y1 };
+        let lastPoint = { x: this.lines[this.lines.length - 1].x2, y: this.lines[this.lines.length - 1].y2 };
+        let distance = Phaser.Math.Distance.Between(firstPoint.x, firstPoint.y, lastPoint.x, lastPoint.y);
+        return distance < 20;
+    }
+
+    isSymmetrical() {
+        // Simple symmetry check: compare left half with right half
+        let centerX = this.sys.game.config.width / 2;
+        let leftPoints = this.lines.filter(line => line.x1 < centerX && line.x2 < centerX).length;
+        let rightPoints = this.lines.filter(line => line.x1 > centerX && line.x2 > centerX).length;
+        return Math.abs(leftPoints - rightPoints) <= 1;
+    }
+}    // Phaser game configuration
     let game;
     const config = {
         type: Phaser.AUTO,
