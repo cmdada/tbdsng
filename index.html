@@ -165,18 +165,30 @@
             // Game logic goes here :3
         }
     }
-
-    class IntroScene extends Phaser.Scene {
+class IntroScene extends Phaser.Scene {
         constructor() {
             super('IntroScene');
         }
-
+    
         create() {
             const video = this.add.video(400, 300, 'intro');
             video.play();
             video.on('complete', function() {
                 this.scene.start('TableBuildingScene');
             }, this);
+    
+            // Add skip button
+            const skipButton = this.add.text(700, 550, 'Skip', {
+                fontSize: '20px',
+                fill: '#ffffff',
+                backgroundColor: '#4a4a4a',
+                padding: { x: 10, y: 5 }
+            }).setInteractive();
+    
+            skipButton.on('pointerdown', () => {
+                video.stop();
+                this.scene.start('TableBuildingScene');
+            });
         }
     }
 
