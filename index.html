@@ -55,6 +55,22 @@
         #options-window button {
             margin-top: 10px;
         }
+        #small-screen-message {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom right, #ff9a9e, #fad0c4);
+            z-index: 1000;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #small-screen-message h2 {
+            margin-top: 40%;
+        }
     </style>
 </head>
 <body>
@@ -62,6 +78,10 @@
     <div id="game-container">
         <h1>TableBuildingDatingSimulator.exe</h1>
         <div id="game"></div>
+    </div>
+    <div id="small-screen-message">
+        <h2>Screen Too Small</h2>
+        <p>Sorry, this game requires a larger screen to play. Please try on a device with a wider screen.</p>
     </div>
     <div id="options-window">
         <h2>Options</h2>
@@ -95,8 +115,8 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(flyingImage, imageX, imageY, 100, 100);
 
-            imageX -= 2; // Move left
-            imageY += 1; // Move down
+            imageX -= 2; 
+            imageY += 1;
 
             if (imageX < -100 || imageY > canvas.height) {
                 imageX = canvas.width;
@@ -109,6 +129,7 @@
         flyingImage.onload = animateBackground;
 
         // Phaser game configuration
+        let game;
         const config = {
             type: Phaser.AUTO,
             width: 800,
@@ -120,7 +141,6 @@
                 update: update
             }
         };
-        const game = new Phaser.Game(config);
 
         function preload() {
             this.load.image('background', 'assets/bg.png');
@@ -163,9 +183,11 @@
             const fontSize = fontSizeSelect.value + 'px';
             const bgColor = bgColorInput.value;
 
-            game.scene.scenes[0].character.setFontSize(fontSize);
-            game.scene.scenes[0].table.setFontSize(fontSize);
-            game.scene.scenes[0].titleText.setFontSize(parseInt(fontSize) + 4 + 'px');
+            if (game && game.scene.scenes[0]) {
+                game.scene.scenes[0].character.setFontSize(fontSize);
+                game.scene.scenes[0].table.setFontSize(fontSize);
+                game.scene.scenes[0].titleText.setFontSize(parseInt(fontSize) + 4 + 'px');
+            }
 
             document.body.style.background = `linear-gradient(to bottom right, ${bgColor}, #fad0c4)`;
 
@@ -174,6 +196,30 @@
 
         applyButton.addEventListener('click', applyOptions);
         closeButton.addEventListener('click', hideOptionsWindow);
+
+        function checkScreenSize() {
+            const gameContainer = document.getElementById('game-container');
+            const smallScreenMessage = document.getElementById('small-screen-message');
+            const minWidth = 800; 
+            if (window.innerWidth < minWidth) {
+                gameContainer.style.display = 'none';
+                smallScreenMessage.style.display = 'block';
+                if (game) {
+                    game.destroy(true);
+                    game = null;
+                }
+            } else {
+                gameContainer.style.display = 'block';
+                smallScreenMessage.style.display = 'none';
+                if (!game) {
+                    game = new Phaser.Game(config);
+                }
+            }
+        }
+
+        // Call the function initially and on window resize
+        window.addEventListener('load', checkScreenSize);
+        window.addEventListener('resize', checkScreenSize);
     </script>
 </body>
 </html>
