@@ -87,23 +87,54 @@ class IntroScene extends Phaser.Scene {
             });
         }
     }
+    
 class TableBuildingScene extends Phaser.Scene {
     preload() {
         this.load.image('background', 'assets/bg.png');
-        this.load.image('tablepiece', 'assets/table.png');
+        this.load.image('tablepiece', 'assets/tablepiece.png');
     }
 
     constructor() {
         super('TableBuildingScene');
-        this.template = [
-            { x: 200, y: 300, angle: 0 }, // leg 1
-            { x: 250, y: 400, angle: 0 }, // bottom 1
-            { x: 300, y: 300, angle: 0 }, // leg 2
-            { x: 400, y: 300, angle: 0 }, // leg 3
-            { x: 450, y: 400, angle: 0 }, // bottom 2
-            { x: 500, y: 300, angle: 0 }, // leg 4
-            { x: 350, y: 200, angle: 0 }  // top
+        this.template = this.createTableTemplate();
+    }
+
+    createTableTemplate() {
+        const centerX = 400;
+        const centerY = 300;
+        const tableWidth = 10; // 10 pieces wide
+        const tableHeight = 6; // 6 pieces tall
+        const legHeight = 5; // 5 pieces tall for legs
+        const template = [];
+
+        // Table top
+        for (let x = 0; x < tableWidth; x++) {
+            for (let y = 0; y < tableHeight; y++) {
+                template.push({
+                    x: centerX - (tableWidth * 10) + (x * 20) + 10,
+                    y: centerY - (tableHeight * 10) + (y * 20) + 10,
+                    angle: 0
+                });
+            }
+        }
+
+        // Table legs
+        const legPositions = [
+            {x: centerX - (tableWidth * 10) + 10, y: centerY + (tableHeight * 10)},
+            {x: centerX + (tableWidth * 10) - 10, y: centerY + (tableHeight * 10)}
         ];
+
+        legPositions.forEach(pos => {
+            for (let i = 0; i < legHeight; i++) {
+                template.push({
+                    x: pos.x,
+                    y: pos.y + (i * 20),
+                    angle: 0
+                });
+            }
+        });
+
+        return template;
     }
 
     create() {
@@ -116,12 +147,13 @@ class TableBuildingScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         this.pieces = [];
-        this.currentPiece = null;
-        this.lastPlacedPoint = null;
+        this.isDrawing = false;
+        this.lastDrawnTime = 0;
+        this.drawInterval = 0;
 
-        this.input.on('pointerdown', this.startPlacement, this);
-        this.input.on('pointermove', this.movePiece, this);
-        this.input.on('pointerup', this.endPlacement, this);
+        this.input.on('pointerdown', this.startDrawing, this);
+        this.input.on('pointermove', this.continueDraw, this);
+        this.input.on('pointerup', this.stopDrawing, this);
 
         this.finishButton = this.add.text(700, 550, 'Finish', {
             fontSize: '20px',
@@ -151,7 +183,6 @@ class TableBuildingScene extends Phaser.Scene {
             loop: true
         });
 
-        // Draw template pieces
         this.drawTemplate();
     }
 
@@ -164,24 +195,32 @@ class TableBuildingScene extends Phaser.Scene {
         });
     }
 
-    startPlacement(pointer) {
+    startDrawing(pointer) {
         if (this.timeLeft > 0 && !this.isPointerOverButton(pointer)) {
-            this.currentPiece = this.add.image(pointer.x, pointer.y, 'tablepiece').setInteractive();
-            this.input.setDraggable(this.currentPiece);
+            this.isDrawing = true;
+            this.lastDrawnTime = 0;
+            this.drawPiece(pointer);
         }
     }
 
-    movePiece(pointer) {
-        if (this.currentPiece) {
-            this.currentPiece.x = pointer.x;
-            this.currentPiece.y = pointer.y;
+    continueDraw(pointer) {
+        if (this.isDrawing && this.timeLeft > 0) {
+            const currentTime = this.time.now;
+            if (currentTime - this.lastDrawnTime >= this.drawInterval) {
+                this.drawPiece(pointer);
+                this.lastDrawnTime = currentTime;
+            }
         }
     }
 
-    endPlacement(pointer) {
-        if (this.currentPiece) {
-            this.pieces.push(this.currentPiece);
-            this.currentPiece = null;
+    stopDrawing() {
+        this.isDrawing = false;
+    }
+
+    drawPiece(pointer) {
+        if (!this.isPointerOverButton(pointer)) {
+            const newPiece = this.add.image(pointer.x, pointer.y, 'tablepiece').setInteractive();
+            this.pieces.push(newPiece);
         }
     }
 
@@ -239,7 +278,7 @@ class TableBuildingScene extends Phaser.Scene {
         const averageCoverage = totalCoverage / totalPiecesCovered;
         return Math.max(0, Math.min(100, averageCoverage));
     }
-}    
+}
     // Phaser game configuration
     let game;
     const config = {
