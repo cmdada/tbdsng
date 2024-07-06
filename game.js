@@ -1,4 +1,3 @@
-
 // Background animation
 const canvas = document.getElementById('background-canvas');
 const ctx = canvas.getContext('2d');
@@ -66,17 +65,18 @@ class MainScene extends Phaser.Scene {
 class VisualNovelScene extends Phaser.Scene {
     constructor() {
         super('VisualNovelScene');
-        this.currentScene = 'coffee-shop';
+        this.currentScene = 'intro';
         this.characters = {
-            Alice: { name: 'Alice', image: 'alice' },
-            Bob: { name: 'Bob', image: 'bob' }
+            you: { name: 'you', image: 'you' },
+            molly: { name: 'molly', image: 'molly' }
         };
     }
 
     preload() {
         this.load.image('background', 'assets/coffee_bg.png');
-        this.load.image('alice', 'assets/alice.png');
-        this.load.image('bob', 'assets/bob.png');
+        this.load.image('you', 'assets/you.png');
+        this.load.image('molly', 'assets/molly.png');
+        this.load.text('introScript', 'scenes/intro.md');
     }
 
     create() {
@@ -84,19 +84,12 @@ class VisualNovelScene extends Phaser.Scene {
         this.dialogueBox = this.add.rectangle(400, 500, 700, 150, 0x000000, 0.5).setOrigin(0.5);
         this.dialogueText = this.add.text(50, 450, '', { fontSize: '18px', fill: '#ffffff', wordWrap: { width: 700 } });
         
-        this.aliceSprite = this.add.image(200, 300, 'alice').setScale(0.5);
-        this.bobSprite = this.add.image(600, 300, 'bob').setScale(0.5);
+        this.youSprite = this.add.image(200, 249.5, 'you').setScale(0.5);
+        this.mollySprite = this.add.image(600, 263, 'molly').setScale(0.3);
         
-        this.loadMarkdown('scenes/intro.md');
-    }
-
-    loadMarkdown(file) {
-        fetch(file)
-            .then(response => response.text())
-            .then(text => {
-                this.script = text;
-                this.displayContent(this.currentScene);
-            });
+        this.script = this.cache.text.get('introScript');
+        console.log("Loaded script:", this.script);
+        this.displayContent(this.currentScene);
     }
 
     displayContent(sceneId) {
@@ -105,6 +98,7 @@ class VisualNovelScene extends Phaser.Scene {
         
         if (!currentScene) {
             console.error(`Scene ${sceneId} not found`);
+            this.dialogueText.setText("Scene not found. Please check the script.");
             return;
         }
 
@@ -112,7 +106,11 @@ class VisualNovelScene extends Phaser.Scene {
         const dialogues = lines.filter(line => line.includes(':'));
         const choices = lines.filter(line => line.startsWith('1. [') || line.startsWith('2. ['));
 
-        this.displayDialogue(dialogues[0]);
+        if (dialogues.length > 0) {
+            this.displayDialogue(dialogues[0]);
+        } else {
+            this.dialogueText.setText("No dialogue found in this scene.");
+        }
         this.displayChoices(choices);
     }
 
@@ -121,8 +119,8 @@ class VisualNovelScene extends Phaser.Scene {
         this.dialogueText.setText(`${character}: ${text.trim()}`);
 
         // Highlight speaking character
-        this.aliceSprite.setAlpha(character.trim() === 'Alice' ? 1 : 0.5);
-        this.bobSprite.setAlpha(character.trim() === 'Bob' ? 1 : 0.5);
+        this.youSprite.setAlpha(character.trim() === 'you' ? 1 : 0.5);
+        this.mollySprite.setAlpha(character.trim() === 'molly' ? 1 : 0.5);
     }
 
     displayChoices(choices) {
@@ -155,6 +153,7 @@ class VisualNovelScene extends Phaser.Scene {
         this.displayContent(sceneId);
     }
 }
+
 class IntroScene extends Phaser.Scene {
     constructor() {
         super('IntroScene');
