@@ -66,16 +66,27 @@ class MainScene extends Phaser.Scene {
 class VisualNovelScene extends Phaser.Scene {
     constructor() {
         super('VisualNovelScene');
+        this.currentScene = 'coffee-shop';
+        this.characters = {
+            Alice: { name: 'Alice', image: 'alice' },
+            Bob: { name: 'Bob', image: 'bob' }
+        };
     }
 
     preload() {
-        this.load.image('background', 'assets/vn_background.png');
+        this.load.image('background', 'assets/coffee_bg.png');
+        this.load.image('alice', 'assets/alice.png');
+        this.load.image('bob', 'assets/bob.png');
     }
 
     create() {
         this.add.image(400, 300, 'background');
         this.dialogueBox = this.add.rectangle(400, 500, 700, 150, 0x000000, 0.5).setOrigin(0.5);
         this.dialogueText = this.add.text(50, 450, '', { fontSize: '18px', fill: '#ffffff', wordWrap: { width: 700 } });
+        
+        this.aliceSprite = this.add.image(200, 300, 'alice').setScale(0.5);
+        this.bobSprite = this.add.image(600, 300, 'bob').setScale(0.5);
+        
         this.loadMarkdown('scenes/intro.md');
     }
 
@@ -83,54 +94,67 @@ class VisualNovelScene extends Phaser.Scene {
         fetch(file)
             .then(response => response.text())
             .then(text => {
-                const content = marked.parse(text);
-                this.displayContent(content);
+                this.script = text;
+                this.displayContent(this.currentScene);
             });
     }
 
-    displayContent(content) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(content, 'text/html');
-        const paragraphs = doc.querySelectorAll('p');
-    
-        const dialogueText = Array.from(paragraphs).map(p => p.textContent).join('\n');
-        this.dialogueText.setText(dialogueText);
-    
-        const choices = doc.querySelectorAll('a');
-        const choiceCount = choices.length;
-        const choiceSpacing = 40;
-        const startY = 530 - ((choiceCount - 1) * choiceSpacing) / 2; 
-    
+    displayContent(sceneId) {
+        const scenes = this.script.split('\n## ');
+        const currentScene = scenes.find(scene => scene.startsWith(sceneId) || scene.toLowerCase().includes(sceneId.toLowerCase()));
+        
+        if (!currentScene) {
+            console.error(`Scene ${sceneId} not found`);
+            return;
+        }
+
+        const lines = currentScene.split('\n');
+        const dialogues = lines.filter(line => line.includes(':'));
+        const choices = lines.filter(line => line.startsWith('1. [') || line.startsWith('2. ['));
+
+        this.displayDialogue(dialogues[0]);
+        this.displayChoices(choices);
+    }
+
+    displayDialogue(dialogue) {
+        const [character, text] = dialogue.split(':');
+        this.dialogueText.setText(`${character}: ${text.trim()}`);
+
+        // Highlight speaking character
+        this.aliceSprite.setAlpha(character.trim() === 'Alice' ? 1 : 0.5);
+        this.bobSprite.setAlpha(character.trim() === 'Bob' ? 1 : 0.5);
+    }
+
+    displayChoices(choices) {
+        // Clear existing choices
+        this.children.list
+            .filter(child => child.type === 'Text' && child.y > 530)
+            .forEach(child => child.destroy());
+
         choices.forEach((choice, index) => {
-            const text = choice.textContent;
-            const href = choice.getAttribute('href');
-            const [_, scene] = href.split(':');
-            
-            const choiceText = this.add.text(600, startY + index * choiceSpacing, text, { 
-                fontSize: '18px', 
-                fill: '#ffffff',
-                backgroundColor: '#4a4a4a',
-                padding: { x: 10, y: 5 }
-            }).setOrigin(0.5).setInteractive();
-    
-            choiceText.on('pointerdown', () => {
-                this.handleChoice(scene);
-            });
+            const match = choice.match(/\d+\. \[(.*?)\]\((.*?)\)/);
+            if (match) {
+                const [, text, href] = match;
+                
+                const choiceText = this.add.text(400, 530 + index * 30, text, { 
+                    fontSize: '16px', 
+                    fill: '#ffffff',
+                    backgroundColor: '#4a4a4a',
+                    padding: { x: 10, y: 5 }
+                }).setOrigin(0.5).setInteractive();
+        
+                choiceText.on('pointerdown', () => {
+                    this.handleChoice(href);
+                });
+            }
         });
     }
     
-    handleChoice(scene) {
-        switch(scene) {
-            case 'start-table-building':
-                this.scene.start('TableBuildingScene');
-                break;
-            case 'options':
-                showOptionsWindow();
-                break;
-        }
+    handleChoice(sceneId) {
+        this.currentScene = sceneId;
+        this.displayContent(sceneId);
     }
 }
-
 class IntroScene extends Phaser.Scene {
     constructor() {
         super('IntroScene');
