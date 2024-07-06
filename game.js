@@ -65,7 +65,7 @@ class MainScene extends Phaser.Scene {
 class VisualNovelScene extends Phaser.Scene {
     constructor() {
         super('VisualNovelScene');
-        this.currentScene = 'intro';
+        this.currentScene = 'IntroScene';
         this.characters = {
             you: { name: 'you', image: 'you' },
             molly: { name: 'molly', image: 'molly' }
