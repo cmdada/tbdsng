@@ -4,29 +4,6 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const flyingImage = new Image();
-flyingImage.src = 'assets/flying_image.png';
-
-let imageX = canvas.width;
-let imageY = -100;
-
-function animateBackground() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(flyingImage, imageX, imageY, 100, 100);
-
-    imageX -= 2; 
-    imageY += 1.12; 
-
-    if (imageX < -100 || imageY > canvas.height) {
-        imageX = canvas.width;
-        imageY = -100;
-    }
-
-    requestAnimationFrame(animateBackground);
-}
-
-flyingImage.onload = animateBackground;
-
 // Phaser game scenes
 class MainScene extends Phaser.Scene {
     constructor() {
