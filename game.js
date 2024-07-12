@@ -42,18 +42,25 @@ class MainScene extends Phaser.Scene {
 class VisualNovelScene extends Phaser.Scene {
     constructor() {
         super('VisualNovelScene');
-        this.currentScene = 'IntroScene';
+        this.currentScene = 'intro';
         this.characters = {
-            you: { name: 'you', image: 'you' },
-            molly: { name: 'molly', image: 'molly' }
+            you: { name: 'You', image: 'you' },
+            molly: { name: 'Molly', image: 'molly' }
         };
+        this.script = null;
     }
 
     preload() {
         this.load.image('background', 'assets/coffee_bg.png');
         this.load.image('you', 'assets/you.png');
         this.load.image('molly', 'assets/molly.png');
-        this.load.text('introScript', 'scenes/intro.md');
+        this.load.json('vnScript', 'scenes/vn_script.json');
+        this.load.on('filecomplete-json-vnScript', function() {
+            console.log('vnScript loaded successfully');
+        });
+        this.load.on('loaderror', function(file) {
+            console.error('Error loading file:', file.key);
+        });
     }
 
     create() {
@@ -61,73 +68,119 @@ class VisualNovelScene extends Phaser.Scene {
         this.dialogueBox = this.add.rectangle(400, 500, 700, 150, 0x000000, 0.5).setOrigin(0.5);
         this.dialogueText = this.add.text(50, 450, '', { fontSize: '18px', fill: '#ffffff', wordWrap: { width: 700 } });
         
-        this.youSprite = this.add.image(200, 249.5, 'you').setScale(0.5);
-        this.mollySprite = this.add.image(600, 263, 'molly').setScale(0.3);
+        this.youSprite = this.add.image(200, 249.5, 'you').setScale(0.5).setAlpha(0);
+        this.mollySprite = this.add.image(600, 263, 'molly').setScale(0.3).setAlpha(0);
         
-        this.script = this.cache.text.get('introScript');
-        console.log("Loaded script:", this.script);
-        this.displayContent(this.currentScene);
+        try {
+            this.script = this.cache.json.get('vnScript');
+            console.log('Loaded script:', this.script);
+            if (!this.script) {
+                throw new Error('Failed to load vnScript');
+            }
+            this.displayContent(this.currentScene);
+        } catch (error) {
+            console.error('Error loading script:', error);
+            this.dialogueText.setText('Error loading script. Please check the console for details.');
+        }
+
+        // Add spacebar input
+        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        this.spaceKey.on('down', this.handleInput, this);
+
+        // Add a text to instruct the player
+        this.instructionText = this.add.text(400, 580, 'Press SPACEBAR to continue', {
+            fontSize: '16px',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+    }
+
+    handleInput() {
+        if (this.currentDialogueIndex < this.currentScene.dialogue.length) {
+            this.displayNextDialogue();
+        } else if (this.currentScene.choices) {
+            // If there are choices, pressing space does nothing
+            // The player needs to click on a choice
+        } else {
+            // If there are no more dialogues or choices, you might want to end the scene or move to the next one
+            console.log('End of current scene');
+        }
     }
 
     displayContent(sceneId) {
-        const scenes = this.script.split('\n## ');
-        const currentScene = scenes.find(scene => scene.startsWith(sceneId) || scene.toLowerCase().includes(sceneId.toLowerCase()));
-        
-        if (!currentScene) {
-            console.error(`Scene ${sceneId} not found`);
-            this.dialogueText.setText("Scene not found. Please check the script.");
+        if (!this.script) {
+            console.error('Script is not loaded');
+            this.dialogueText.setText('Error: Script is not loaded');
             return;
         }
 
-        const lines = currentScene.split('\n');
-        const dialogues = lines.filter(line => line.includes(':'));
-        const choices = lines.filter(line => line.startsWith('1. [') || line.startsWith('2. ['));
-
-        if (dialogues.length > 0) {
-            this.displayDialogue(dialogues[0]);
-        } else {
-            this.dialogueText.setText("No dialogue found in this scene.");
+        this.currentScene = sceneId;
+        const scene = this.script[sceneId];
+        
+        if (!scene) {
+            console.error(`Scene ${sceneId} not found`);
+            this.dialogueText.setText(`Error: Scene "${sceneId}" not found. Please check the script.`);
+            return;
         }
-        this.displayChoices(choices);
+
+        this.currentDialogueIndex = 0;
+        this.currentScene = scene;
+        this.displayNextDialogue();
+    }
+
+    displayNextDialogue() {
+        if (this.currentDialogueIndex < this.currentScene.dialogue.length) {
+            const dialogue = this.currentScene.dialogue[this.currentDialogueIndex];
+            this.displayDialogue(dialogue);
+            this.currentDialogueIndex++;
+        } else {
+            this.displayChoices(this.currentScene.choices);
+        }
     }
 
     displayDialogue(dialogue) {
-        const [character, text] = dialogue.split(':');
-        this.dialogueText.setText(`${character}: ${text.trim()}`);
+        const { character, text } = dialogue;
+        this.dialogueText.setText(`${this.characters[character].name}: ${text}`);
 
-        // Highlight speaking character
-        this.youSprite.setAlpha(character.trim() === 'you' ? 1 : 0.5);
-        this.mollySprite.setAlpha(character.trim() === 'molly' ? 1 : 0.5);
+        // Show and highlight speaking character
+        Object.keys(this.characters).forEach(char => {
+            const sprite = this[`${char}Sprite`];
+            if (sprite) {
+                sprite.setAlpha(character === char ? 1 : 0.5);
+            }
+        });
     }
 
     displayChoices(choices) {
         // Clear existing choices
         this.children.list
-            .filter(child => child.type === 'Text' && child.y > 530)
+            .filter(child => child.type === 'Text' && child.y > 530 && child.y < 580)
             .forEach(child => child.destroy());
 
         choices.forEach((choice, index) => {
-            const match = choice.match(/\d+\. \[(.*?)\]\((.*?)\)/);
-            if (match) {
-                const [, text, href] = match;
-                
-                const choiceText = this.add.text(400, 530 + index * 30, text, { 
-                    fontSize: '16px', 
-                    fill: '#ffffff',
-                    backgroundColor: '#4a4a4a',
-                    padding: { x: 10, y: 5 }
-                }).setOrigin(0.5).setInteractive();
-        
-                choiceText.on('pointerdown', () => {
-                    this.handleChoice(href);
-                });
-            }
+            const choiceText = this.add.text(400, 530 + index * 30, choice.text, { 
+                fontSize: '16px', 
+                fill: '#ffffff',
+                backgroundColor: '#4a4a4a',
+                padding: { x: 10, y: 5 }
+            }).setOrigin(0.5).setInteractive();
+    
+            choiceText.on('pointerdown', () => {
+                this.handleChoice(choice.nextScene);
+            });
         });
+
+        // Hide the spacebar instruction when showing choices
+        if (this.instructionText) {
+            this.instructionText.setVisible(false);
+        }
     }
     
-    handleChoice(sceneId) {
-        this.currentScene = sceneId;
-        this.displayContent(sceneId);
+    handleChoice(nextScene) {
+        this.displayContent(nextScene);
+        // Show the spacebar instruction again after making a choice
+        if (this.instructionText) {
+            this.instructionText.setVisible(true);
+        }
     }
 }
 
