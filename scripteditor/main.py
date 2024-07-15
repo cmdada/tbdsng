@@ -1,7 +1,7 @@
 import json
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio, Gdk
 
 class ScriptEditor:
     def __init__(self, script_path):
@@ -73,6 +73,10 @@ class ScriptEditor:
 class ScriptEditorGUI(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self, title="Script Editor")
+        settings = Gtk.Settings.get_default()
+        settings.set_property("gtk-application-prefer-dark-theme", True)
+        for i in settings.list_properties():
+            print(i)
         self.editor = None
 
         self.set_default_size(800, 600)
@@ -85,6 +89,7 @@ class ScriptEditorGUI(Gtk.Window):
         header.props.title = "Script Editor"
         self.set_titlebar(header)
 
+        # Icon names for buttons
         self.open_button = Gtk.Button.new_from_icon_name("document-open", Gtk.IconSize.BUTTON)
         self.open_button.connect("clicked", self.on_open_clicked)
         header.pack_start(self.open_button)
@@ -101,6 +106,10 @@ class ScriptEditorGUI(Gtk.Window):
         self.delete_scene_button = Gtk.Button.new_from_icon_name("list-remove-symbolic", Gtk.IconSize.BUTTON)
         self.delete_scene_button.connect("clicked", self.on_delete_scene_clicked)
         header.pack_start(self.delete_scene_button)
+
+        self.about_button = Gtk.Button.new_from_icon_name("help-about", Gtk.IconSize.BUTTON)
+        self.about_button.connect("clicked", self.on_about_clicked)
+        header.pack_end(self.about_button)
 
         paned = Gtk.Paned(orientation=Gtk.Orientation.VERTICAL)
         main_box.pack_start(paned, True, True, 0)
@@ -315,6 +324,15 @@ class ScriptEditorGUI(Gtk.Window):
                 self.editor.delete_choice(scene, choice_index)
                 self.load_scene(scene)
 
+    def on_about_clicked(self, button):
+        about_dialog = Gtk.AboutDialog()
+        about_dialog.set_program_name("VnScript Editor")
+        about_dialog.set_version("1.0")
+        about_dialog.set_authors(["cmdada"])
+        about_dialog.set_comments("Quick GTK3 app to edit vn_script.json files for TableBuildingDatingSimulatorNG.")
+        about_dialog.run()
+        about_dialog.destroy()
+
     def show_error_dialog(self, message):
         dialog = Gtk.MessageDialog(
             transient_for=self,
@@ -325,7 +343,6 @@ class ScriptEditorGUI(Gtk.Window):
         )
         dialog.run()
         dialog.destroy()
-
 win = ScriptEditorGUI()
 win.connect("destroy", Gtk.main_quit)
 win.show_all()
