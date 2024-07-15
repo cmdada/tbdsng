@@ -32,6 +32,11 @@
                 "text": "dialogue"
             }
         ],
-        "choices": []
+        "choices": [
+            {
+                "text": "choice text",
+                "nextScene": "TableBuildingScene"
+            }
+        ]
     }
 }

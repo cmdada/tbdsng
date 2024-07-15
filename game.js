@@ -105,14 +105,14 @@ class VisualNovelScene extends Phaser.Scene {
             console.log('End of current scene');
         }
     }
-
+    
     displayContent(sceneId) {
         if (!this.script) {
             console.error('Script is not loaded');
             this.dialogueText.setText('Error: Script is not loaded');
             return;
         }
-
+    
         this.currentScene = sceneId;
         const scene = this.script[sceneId];
         
@@ -121,21 +121,29 @@ class VisualNovelScene extends Phaser.Scene {
             this.dialogueText.setText(`Error: Scene "${sceneId}" not found. Please check the script.`);
             return;
         }
-
+    
+        console.log('Loaded scene:', sceneId);
+        console.log('Dialogue:', scene.dialogue);
+        console.log('Choices:', scene.choices); // Check if choices are correctly loaded
+    
         this.currentDialogueIndex = 0;
         this.currentScene = scene;
         this.displayNextDialogue();
     }
-
-    displayNextDialogue() {
-        if (this.currentDialogueIndex < this.currentScene.dialogue.length) {
-            const dialogue = this.currentScene.dialogue[this.currentDialogueIndex];
-            this.displayDialogue(dialogue);
-            this.currentDialogueIndex++;
-        } else {
-            this.displayChoices(this.currentScene.choices);
-        }
-    }
+	displayNextDialogue() {
+	    if (this.currentDialogueIndex < this.currentScene.dialogue.length) {
+	        const dialogue = this.currentScene.dialogue[this.currentDialogueIndex];
+	        this.displayDialogue(dialogue);
+	        this.currentDialogueIndex++;
+	    } else if (this.currentScene.choices) {
+	        // Display choices if they exist
+	        this.displayChoices(this.currentScene.choices);
+	    } else {
+	        // Handle end of scene logic
+	        console.log('End of scene reached');
+	    }
+	}
+	
 
     displayDialogue(dialogue) {
         const { character, text } = dialogue;
@@ -151,11 +159,6 @@ class VisualNovelScene extends Phaser.Scene {
     }
 
     displayChoices(choices) {
-        // Clear existing choices
-        this.children.list
-            .filter(child => child.type === 'Text' && child.y > 530 && child.y < 580)
-            .forEach(child => child.destroy());
-
         choices.forEach((choice, index) => {
             const choiceText = this.add.text(400, 530 + index * 30, choice.text, { 
                 fontSize: '16px', 
@@ -163,25 +166,24 @@ class VisualNovelScene extends Phaser.Scene {
                 backgroundColor: '#4a4a4a',
                 padding: { x: 10, y: 5 }
             }).setOrigin(0.5).setInteractive();
-    
+        
             choiceText.on('pointerdown', () => {
                 this.handleChoice(choice.nextScene);
             });
         });
-
-        // Hide the spacebar instruction when showing choices
+    
+        // Optionally hide the instruction text or handle it appropriately
         if (this.instructionText) {
             this.instructionText.setVisible(false);
         }
     }
     
+    
     handleChoice(nextScene) {
-        this.displayContent(nextScene);
-        // Show the spacebar instruction again after making a choice
-        if (this.instructionText) {
-            this.instructionText.setVisible(true);
-        }
+        // Transition to the next scene based on the choice
+        this.scene.start(nextScene);
     }
+    
 }
 
 class IntroScene extends Phaser.Scene {
