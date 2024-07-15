@@ -1,0 +1,170 @@
+{
+    "intro": {
+        "dialogue": [
+            {
+                "character": "you",
+                "text": "I can't believe I signed up for this 'Build a Table, Find Love' event. What was I thinking?"
+            },
+            {
+                "character": "molly",
+                "text": "Hey there! You must be new. I'm Molly, the event organizer. Ready to build some romance?"
+            },
+            {
+                "character": "you",
+                "text": "Uh, hi Molly. I'm not sure I'm cut out for this..."
+            },
+            {
+                "character": "molly",
+                "text": "Nonsense! Everyone's got a little carpenter in them. And who knows, you might just build a connection along the way!"
+            }
+        ],
+        "choices": [
+            {
+                "text": "I guess I could give it a shot.",
+                "nextScene": "workshop"
+            },
+            {
+                "text": "This is ridiculous. I'm leaving.",
+                "nextScene": "leave"
+            }
+        ]
+    },
+    "workshop": {
+        "dialogue": [
+            {
+                "character": "molly",
+                "text": "That's the spirit! Now, let's see what you can do with these pieces of wood and your bare hands."
+            },
+            {
+                "character": "you",
+                "text": "Okay, here goes nothing..."
+            }
+        ],
+        "choices": [
+            {
+                "text": "Start building",
+                "nextScene": "building"
+            }
+        ]
+    },
+    "building": {
+        "dialogue": [
+            {
+                "character": "molly",
+                "text": "Wow, you're really getting into it! Your table is starting to take shape."
+            },
+            {
+                "character": "you",
+                "text": "Thanks! I'm surprised at how much fun this is."
+            },
+            {
+                "character": "molly",
+                "text": "See? I told you! There's something special about creating with your own hands."
+            }
+        ],
+        "choices": [
+            {
+                "text": "Keep building",
+                "nextScene": "finish"
+            }
+        ]
+    },
+    "finish": {
+        "dialogue": [
+            {
+                "character": "molly",
+                "text": "And... time's up! Let's see what you've built."
+            },
+            {
+                "character": "you",
+                "text": "I hope it's not too wobbly..."
+            },
+            {
+                "character": "molly",
+                "text": "It's perfect! Just like the connection we've built today."
+            }
+        ],
+        "choices": [
+            {
+                "text": "Ask Molly out",
+                "nextScene": "date"
+            },
+            {
+                "text": "Thank Molly and leave",
+                "nextScene": "goodbye"
+            }
+        ]
+    },
+    "date": {
+        "dialogue": [
+            {
+                "character": "you",
+                "text": "Molly, would you like to grab coffee sometime? Maybe at a table that's not handmade?"
+            },
+            {
+                "character": "molly",
+                "text": "I'd love to! Who knew building tables could lead to building relationships?"
+            }
+        ],
+        "choices": [
+            {
+                "text": "End game",
+                "nextScene": "end"
+            }
+        ]
+    },
+    "goodbye": {
+        "dialogue": [
+            {
+                "character": "you",
+                "text": "Thanks for everything, Molly. This was surprisingly fun!"
+            },
+            {
+                "character": "molly",
+                "text": "I'm glad you enjoyed it! Remember, whether it's tables or relationships, it's all about putting in the effort and having fun along the way."
+            }
+        ],
+        "choices": [
+            {
+                "text": "End game",
+                "nextScene": "end"
+            }
+        ]
+    },
+    "leave": {
+        "dialogue": [
+            {
+                "character": "you",
+                "text": "Sorry, but this really isn't my thing. I'm going to head out."
+            },
+            {
+                "character": "molly",
+                "text": "Oh, that's a shame. Well, if you change your mind, you know where to find us!"
+            }
+        ],
+        "choices": [
+            {
+                "text": "End game",
+                "nextScene": "end"
+            }
+        ]
+    },
+    "end": {
+        "dialogue": [
+            {
+                "character": "you",
+                "text": "Who would have thought a table-building event could be so life-changing?"
+            }
+        ],
+        "choices": [
+            {
+                "text": "Return to main menu",
+                "nextScene": "mainMenu"
+            }
+        ]
+    },
+    "script": {
+        "dialogue": [],
+        "choices": []
+    }
+}
