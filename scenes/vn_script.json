@@ -1,1 +1,37 @@
-vn_script.json
+{
+    "test": {
+        "dialogue": [
+            {
+                "character": "character",
+                "text": "dialogue"
+            },
+            {
+                "character": "character2",
+                "text": "dialogue2"
+            }
+        ],
+        "choices": [
+            {
+                "text": "choice text",
+                "nextScene": "next scene"
+            },
+            {
+                "text": "choice text2",
+                "nextScene": "next scene2"
+            }
+        ]
+    },
+    "intro": {
+        "dialogue": [
+            {
+                "character": "you",
+                "text": "dialogue"
+            },
+            {
+                "character": "molly",
+                "text": "dialogue"
+            }
+        ],
+        "choices": []
+    }
+}
