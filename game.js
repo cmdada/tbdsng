@@ -48,6 +48,9 @@ class VisualNovelScene extends Phaser.Scene {
             molly: { name: 'Molly', image: 'molly' }
         };
         this.script = null;
+        this.choiceTexts = [];
+        this.currentDialogueIndex = 0;
+        this.isChoiceDisplayed = false;
     }
 
     preload() {
@@ -55,12 +58,6 @@ class VisualNovelScene extends Phaser.Scene {
         this.load.image('you', 'assets/you.png');
         this.load.image('molly', 'assets/molly.png');
         this.load.json('vnScript', 'scenes/vn_script.json');
-        this.load.on('filecomplete-json-vnScript', function() {
-            console.log('vnScript loaded successfully');
-        });
-        this.load.on('loaderror', function(file) {
-            console.error('Error loading file:', file.key);
-        });
     }
 
     create() {
@@ -71,85 +68,82 @@ class VisualNovelScene extends Phaser.Scene {
         this.youSprite = this.add.image(200, 249.5, 'you').setScale(0.5).setAlpha(0);
         this.mollySprite = this.add.image(600, 263, 'molly').setScale(0.3).setAlpha(0);
         
-        try {
-            this.script = this.cache.json.get('vnScript');
-            console.log('Loaded script:', this.script);
-            if (!this.script) {
-                throw new Error('Failed to load vnScript');
-            }
-            this.displayContent(this.currentScene);
-        } catch (error) {
-            console.error('Error loading script:', error);
+        this.script = this.cache.json.get('vnScript');
+        if (!this.script) {
+            console.error('Failed to load vnScript');
             this.dialogueText.setText('Error loading script. Please check the console for details.');
+            return;
         }
 
-        // Add spacebar input
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.spaceKey.on('down', this.handleInput, this);
+        this.numberKeys = this.input.keyboard.addKeys('ONE,TWO,THREE,FOUR');
 
-        // Add a text to instruct the player
         this.instructionText = this.add.text(400, 580, 'Press SPACEBAR to continue', {
             fontSize: '16px',
             fill: '#ffffff'
         }).setOrigin(0.5);
+
+        this.displayContent(this.currentScene);
+    }
+
+    update() {
+        if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+            this.handleInput();
+        }
+
+        for (let i = 0; i < 4; i++) {
+            if (Phaser.Input.Keyboard.JustDown(this.numberKeys[Object.keys(this.numberKeys)[i]])) {
+                this.handleNumberKey(i);
+            }
+        }
     }
 
     handleInput() {
-        if (this.currentDialogueIndex < this.currentScene.dialogue.length) {
-            this.displayNextDialogue();
-        } else if (this.currentScene.choices) {
-            // If there are choices, pressing space does nothing
-            // The player needs to click on a choice
-        } else {
-            // If there are no more dialogues or choices, you might want to end the scene or move to the next one
-            console.log('End of current scene');
+        if (!this.isChoiceDisplayed) {
+            if (this.currentDialogueIndex < this.currentScene.dialogue.length) {
+                this.displayNextDialogue();
+            } else {
+                this.displayChoices();
+            }
+        } else if (this.currentScene.choices && this.currentScene.choices.length === 1) {
+            this.handleChoice(this.currentScene.choices[0].nextScene);
+        }
+    }
+
+    handleNumberKey(index) {
+        if (this.isChoiceDisplayed && this.currentScene.choices && index < this.currentScene.choices.length) {
+            this.handleChoice(this.currentScene.choices[index].nextScene);
         }
     }
     
     displayContent(sceneId) {
-        if (!this.script) {
-            console.error('Script is not loaded');
-            this.dialogueText.setText('Error: Script is not loaded');
-            return;
-        }
-    
-        this.currentScene = sceneId;
         const scene = this.script[sceneId];
-        
         if (!scene) {
             console.error(`Scene ${sceneId} not found`);
             this.dialogueText.setText(`Error: Scene "${sceneId}" not found. Please check the script.`);
             return;
         }
     
-        console.log('Loaded scene:', sceneId);
-        console.log('Dialogue:', scene.dialogue);
-        console.log('Choices:', scene.choices); // Check if choices are correctly loaded
-    
-        this.currentDialogueIndex = 0;
         this.currentScene = scene;
+        this.currentDialogueIndex = 0;
+        this.isChoiceDisplayed = false;
         this.displayNextDialogue();
     }
-	displayNextDialogue() {
-	    if (this.currentDialogueIndex < this.currentScene.dialogue.length) {
-	        const dialogue = this.currentScene.dialogue[this.currentDialogueIndex];
-	        this.displayDialogue(dialogue);
-	        this.currentDialogueIndex++;
-	    } else if (this.currentScene.choices) {
-	        // Display choices if they exist
-	        this.displayChoices(this.currentScene.choices);
-	    } else {
-	        // Handle end of scene logic
-	        console.log('End of scene reached');
-	    }
-	}
-	
+
+    displayNextDialogue() {
+        if (this.currentDialogueIndex < this.currentScene.dialogue.length) {
+            const dialogue = this.currentScene.dialogue[this.currentDialogueIndex];
+            this.displayDialogue(dialogue);
+            this.currentDialogueIndex++;
+        } else {
+            this.displayChoices();
+        }
+    }
 
     displayDialogue(dialogue) {
         const { character, text } = dialogue;
         this.dialogueText.setText(`${this.characters[character].name}: ${text}`);
 
-        // Show and highlight speaking character
         Object.keys(this.characters).forEach(char => {
             const sprite = this[`${char}Sprite`];
             if (sprite) {
@@ -158,32 +152,37 @@ class VisualNovelScene extends Phaser.Scene {
         });
     }
 
-    displayChoices(choices) {
-        choices.forEach((choice, index) => {
-            const choiceText = this.add.text(400, 530 + index * 30, choice.text, { 
+    displayChoices() {
+        this.isChoiceDisplayed = true;
+        this.choiceTexts.forEach(text => text.destroy());
+        this.choiceTexts = [];
+
+        if (!this.currentScene.choices || this.currentScene.choices.length === 0) {
+            console.log('End of scene reached with no choices');
+            this.instructionText.setText('End of scene');
+            return;
+        }
+
+        this.currentScene.choices.forEach((choice, index) => {
+            const choiceText = this.add.text(400, 530 + index * 30, `${index + 1}. ${choice.text}`, { 
                 fontSize: '16px', 
                 fill: '#ffffff',
                 backgroundColor: '#4a4a4a',
                 padding: { x: 10, y: 5 }
-            }).setOrigin(0.5).setInteractive();
+            }).setOrigin(0.5);
         
-            choiceText.on('pointerdown', () => {
-                this.handleChoice(choice.nextScene);
-            });
+            this.choiceTexts.push(choiceText);
         });
     
-        // Optionally hide the instruction text or handle it appropriately
-        if (this.instructionText) {
-            this.instructionText.setVisible(false);
-        }
+        this.instructionText.setText(this.currentScene.choices.length === 1 ? 'Press SPACEBAR to continue' : 'Press 1-4 to select a choice');
     }
-    
     
     handleChoice(nextScene) {
-        // Transition to the next scene based on the choice
-        this.scene.start(nextScene);
+        this.isChoiceDisplayed = false;
+        this.choiceTexts.forEach(text => text.destroy());
+        this.choiceTexts = [];
+        this.displayContent(nextScene);
     }
-    
 }
 
 class IntroScene extends Phaser.Scene {
