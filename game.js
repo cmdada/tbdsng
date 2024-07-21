@@ -54,7 +54,7 @@ class IntroScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('background', 'assets/coffee_bg.png');
+        this.load.image('background', 'assets/hwbg.png');
         this.load.image('you', 'assets/you.png');
         this.load.image('molly', 'assets/molly.png');
         this.load.json('introvnScript', 'scenes/intro.vnscript');
@@ -62,8 +62,8 @@ class IntroScene extends Phaser.Scene {
 
     create() {
         this.add.image(400, 300, 'background');
-        this.dialogueBox = this.add.rectangle(400, 500, 700, 150, 0x000000, 0.5).setOrigin(0.5);
-        this.dialogueText = this.add.text(50, 450, '', { fontSize: '18px', fill: '#ffffff', wordWrap: { width: 700 } });
+        this.dialogueBox = this.add.rectangle(400, 500, 700, 150, 0x9F2B68, 1).setOrigin(0.5);
+        this.dialogueText = this.add.text(80, 440, '', { fontSize: '18px', fill: '#ffffff', wordWrap: { width: 680 } });
         
         this.youSprite = this.add.image(200, 249.5, 'you').setScale(0.5).setAlpha(0);
         this.mollySprite = this.add.image(600, 263, 'molly').setScale(0.3).setAlpha(0);
