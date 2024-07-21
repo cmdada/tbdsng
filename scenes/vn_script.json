@@ -2,12 +2,52 @@
     "test": {
         "dialogue": [
             {
-                "character": "character",
-                "text": "dialogue"
+                "character": "you",
+                "text": "Hey, do you work here?"
             },
             {
-                "character": "character2",
-                "text": "dialogue2"
+                "character": "molly",
+                "text": "Who, me?"
+            },
+            {
+                "character": "molly",
+                "text": "yeah"
+            },
+            {
+                "character": "you",
+                "text": "Do you have a uh"
+            },
+            {
+                "character": "you",
+                "text": "Do you have a  ESTWING Hammer - 16 oz Curved Claw with Smooth Face & Genuine Leather Grip - E16C "
+            },
+            {
+                "character": "you",
+                "text": "Oh, and a chop saw too probably"
+            },
+            {
+                "character": "molly",
+                "text": "What else do you need for this project, oh and what is this all for? A  chair?"
+            },
+            {
+                "character": "you",
+                "text": "Nah, I want to get into table building"
+            },
+            {
+                "character": "you",
+                "text": "With my friends"
+            },
+            {
+                "character": "you",
+                "text": "that I definitely have..."
+            },
+            {
+                "character": "molly",
+                "text": "Lovely! I'm a table builder myself. Here, let me give you  my number in case you need advice"
+            },
+            {
+                "character": "molly",
+                "text": "The hammers are in aisle 13.5, I can take you there if you want"
             }
         ],
         "choices": [
@@ -30,13 +70,12 @@
             {
                 "character": "molly",
                 "text": "dialogue"
+            },
+            {
+                "character": "molly",
+                "text": "on my way!"
             }
         ],
-        "choices": [
-            {
-                "text": "choice text",
-                "nextScene": "TableBuildingScene"
-            }
-        ]
+        "choices": []
     }
 }
