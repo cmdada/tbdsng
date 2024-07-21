@@ -1,5 +1,5 @@
 {
-    "test": {
+    "intro": {
         "dialogue": [
             {
                 "character": "you",
@@ -60,22 +60,5 @@
                 "nextScene": "next scene2"
             }
         ]
-    },
-    "intro": {
-        "dialogue": [
-            {
-                "character": "you",
-                "text": "dialogue"
-            },
-            {
-                "character": "molly",
-                "text": "dialogue"
-            },
-            {
-                "character": "molly",
-                "text": "on my way!"
-            }
-        ],
-        "choices": []
     }
 }
