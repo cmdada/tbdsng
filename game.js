@@ -181,7 +181,7 @@ class VisualNovelScene extends Phaser.Scene {
         this.isChoiceDisplayed = false;
         this.choiceTexts.forEach(text => text.destroy());
         this.choiceTexts = [];
-        this.displayContent(nextScene);
+        this.scene.start(nextScene);
     }
 }
 

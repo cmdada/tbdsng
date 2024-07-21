@@ -52,12 +52,12 @@
         ],
         "choices": [
             {
-                "text": "choice text",
-                "nextScene": "next scene"
+                "text": "MainScene",
+                "nextScene": "MainScene"
             },
             {
-                "text": "choice text2",
-                "nextScene": "next scene2"
+                "text": "TableBuildingSceneCreate",
+                "nextScene": "TableBuildingScene"
             }
         ]
     }
