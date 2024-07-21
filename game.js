@@ -27,7 +27,7 @@ class MainScene extends Phaser.Scene {
 
         this.startText.setInteractive();
         this.startText.on('pointerdown', () => {
-            this.scene.start('IntroScene');
+            this.scene.start('IntroVideoScene');
         });
 
         this.optionsText.setInteractive();
@@ -39,9 +39,9 @@ class MainScene extends Phaser.Scene {
     }
 }
 
-class VisualNovelScene extends Phaser.Scene {
+class IntroScene extends Phaser.Scene {
     constructor() {
-        super('VisualNovelScene');
+        super('IntroScene');
         this.currentScene = 'intro';
         this.characters = {
             you: { name: 'You', image: 'you' },
@@ -57,7 +57,7 @@ class VisualNovelScene extends Phaser.Scene {
         this.load.image('background', 'assets/coffee_bg.png');
         this.load.image('you', 'assets/you.png');
         this.load.image('molly', 'assets/molly.png');
-        this.load.json('vnScript', 'scenes/vn_script.json');
+        this.load.json('introvnScript', 'scenes/intro.vnscript');
     }
 
     create() {
@@ -68,7 +68,7 @@ class VisualNovelScene extends Phaser.Scene {
         this.youSprite = this.add.image(200, 249.5, 'you').setScale(0.5).setAlpha(0);
         this.mollySprite = this.add.image(600, 263, 'molly').setScale(0.3).setAlpha(0);
         
-        this.script = this.cache.json.get('vnScript');
+        this.script = this.cache.json.get('introvnScript');
         if (!this.script) {
             console.error('Failed to load vnScript');
             this.dialogueText.setText('Error loading script. Please check the console for details.');
@@ -185,16 +185,16 @@ class VisualNovelScene extends Phaser.Scene {
     }
 }
 
-class IntroScene extends Phaser.Scene {
+class IntroVideoScene extends Phaser.Scene {
     constructor() {
-        super('IntroScene');
+        super('IntroVideoScene');
     }
 
     create() {
         const video = this.add.video(400, 300, 'intro');
         video.play();
         video.on('complete', function() {
-            this.scene.start('VisualNovelScene');
+            this.scene.start('IntroScene');
         }, this);
 
         const skipButton = this.add.text(700, 550, 'Skip', {
@@ -206,7 +206,7 @@ class IntroScene extends Phaser.Scene {
 
         skipButton.on('pointerdown', () => {
             video.stop();
-            this.scene.start('VisualNovelScene');
+            this.scene.start('IntroScene');
         });
     }
 }
@@ -226,35 +226,10 @@ class TableBuildingScene extends Phaser.Scene {
         const centerX = 400;
         const centerY = 300;
         const tableWidth = 10;
-        const tableHeight = 6;
+        const tableHeight = 0.1;
         const legHeight = 5;
-        const template = [];
-
-        for (let x = 0; x < tableWidth; x++) {
-            for (let y = 0; y < tableHeight; y++) {
-                template.push({
-                    x: centerX - (tableWidth * 10) + (x * 20) + 10,
-                    y: centerY - (tableHeight * 10) + (y * 20) + 10,
-                    angle: 0
-                });
-            }
-        }
-
-        const legPositions = [
-            { x: centerX - (tableWidth * 10) + 10, y: centerY + (tableHeight * 10) },
-            { x: centerX + (tableWidth * 10) - 10, y: centerY + (tableHeight * 10) }
-        ];
-
-        legPositions.forEach(pos => {
-            for (let i = 0; i < legHeight; i++) {
-                template.push({
-                    x: pos.x,
-                    y: pos.y + (i * 20),
-                    angle: 0
-                });
-            }
-        });
-
+        const template = [{ x: centerX - (tableWidth * 10) + 10, y: centerY + (tableHeight * 10) },
+                    { x: centerX + (tableWidth * 10) - 10, y: centerY + (tableHeight * 10) }];
         return template;
     }
 
@@ -296,13 +271,6 @@ class TableBuildingScene extends Phaser.Scene {
 
         this.timeLeft = 30;
         this.score = 0;
-
-        this.timer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
-        });
 
         this.templateSet = new Set(this.template.map(piece => `${piece.x},${piece.y}`));
 
@@ -353,19 +321,7 @@ class TableBuildingScene extends Phaser.Scene {
                pointer.y >= finishBounds.y && pointer.y <= finishBounds.y + finishBounds.height;
     }
 
-    updateTimer() {
-        this.timeLeft--;
-        this.timeText.setText('Time: ' + this.timeLeft);
-
-        if (this.timeLeft <= 0) {
-            this.timer.remove();
-            this.finishTable();
-        }
-    }
-
     finishTable() {
-        this.timer.remove();
-
         let accuracy = this.evaluateTable();
         this.score += accuracy;
 
@@ -426,7 +382,7 @@ const config = {
     width: 800,
     height: 600,
     parent: 'game',
-    scene: [MainScene, IntroScene, VisualNovelScene, TableBuildingScene]
+    scene: [MainScene, IntroVideoScene, IntroScene, TableBuildingScene]
 };
 
 // Options window functionality
